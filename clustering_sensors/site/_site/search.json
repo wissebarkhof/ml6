@@ -1,0 +1,149 @@
+[
+  {
+    "objectID": "analysis.html",
+    "href": "analysis.html",
+    "title": "Introduction",
+    "section": "",
+    "text": "Code\nimport plotly.io as pio\npio.renderers.default = \"notebook_connected\"\nimport pandas as pd\nimport numpy as np\nimport seaborn as sns\nimport matplotlib.pyplot as plt\nCustomer A is experiencing breakdowns on a machine which is causing delays in production. In recent times this has happened 1600 times and we have access to the sensor states at those times.\nEngineers from customer A have been able to categorise 40 of these breakdowns into 3 main categories.\nThe goal of this project is to use the small section of labelled data to extrapolate to unlablled breakdowns. This has two functions: 1. The manual labelling can be time-intensive so this would save the customer time into analysis which category is most prevalent and needs most urgent attention. 2. The model that we obtain can be used to predict breakdown reason in real-time that saves trouble-shooting and reduces the time to resolve and resume production. 3. Insights from the model can be used to prevent further model breakdown.\nThis can be solved using a semi-supervised machine learning methods.\nThis analysis will dig into the data and aim to guide a solution."
+  },
+  {
+    "objectID": "analysis.html#note",
+    "href": "analysis.html#note",
+    "title": "Introduction",
+    "section": "Note",
+    "text": "Note\nEvery aded component adds about 6% of explained variance, meaning that the variance is almost spread evenly in every direction."
+  },
+  {
+    "objectID": "presentation.html#problem-statement",
+    "href": "presentation.html#problem-statement",
+    "title": "Clustering Sensor Data",
+    "section": "Problem Statement",
+    "text": "Problem Statement\n\nMachine at Customer A has broken down 1600 times\nExperts have manually labelled 40 of these into 3 failure categories\nGoal: use the 40 labels to classify all 1560 unlabelled breakdowns\n\n\nWhy does this matter?\n\nSaves manual labelling time\nEnables real-time breakdown classification → faster resolution\nUncovers patterns to prevent future breakdowns"
+  },
+  {
+    "objectID": "presentation.html#approach",
+    "href": "presentation.html#approach",
+    "title": "Clustering Sensor Data",
+    "section": "Approach",
+    "text": "Approach\nTo be filled in"
+  },
+  {
+    "objectID": "presentation.html#results",
+    "href": "presentation.html#results",
+    "title": "Clustering Sensor Data",
+    "section": "Results",
+    "text": "Results\nTo be filled in"
+  },
+  {
+    "objectID": "presentation.html#deployment-value",
+    "href": "presentation.html#deployment-value",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\nModel packaged as an OutageClusterer class with a sklearn-style interface:\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category."
+  },
+  {
+    "objectID": "presentation.html#roadmap",
+    "href": "presentation.html#roadmap",
+    "title": "Clustering Sensor Data",
+    "section": "Roadmap",
+    "text": "Roadmap\nTo be filled in"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Clustering Sensor Data — ML6 Case Study",
+    "section": "",
+    "text": "Customer A collects data from 20 sensors on a machine. Of 1600 observed breakdowns:\n\n40 are expert-labeled with breakdown reasons\n1560 are unlabeled\n\nGoal: Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups."
+  },
+  {
+    "objectID": "index.html#problem",
+    "href": "index.html#problem",
+    "title": "Clustering Sensor Data — ML6 Case Study",
+    "section": "",
+    "text": "Customer A collects data from 20 sensors on a machine. Of 1600 observed breakdowns:\n\n40 are expert-labeled with breakdown reasons\n1560 are unlabeled\n\nGoal: Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups."
+  },
+  {
+    "objectID": "index.html#approach",
+    "href": "index.html#approach",
+    "title": "Clustering Sensor Data — ML6 Case Study",
+    "section": "Approach",
+    "text": "Approach\nTo be filled in during analysis."
+  },
+  {
+    "objectID": "index.html#results",
+    "href": "index.html#results",
+    "title": "Clustering Sensor Data — ML6 Case Study",
+    "section": "Results",
+    "text": "Results\nTo be filled in during analysis."
+  },
+  {
+    "objectID": "analysis.html#feature-analysis",
+    "href": "analysis.html#feature-analysis",
+    "title": "Features",
+    "section": "Feature analysis",
+    "text": "Feature analysis\n\n\nCode\nfrom itertools import combinations\n\nsensor_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\npairs = list(combinations(sensor_cols, 2))\nlabeled_mask = labels_known.notna()\n\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\nfor ax, (x_col, y_col) in zip(axes, pairs):\n    ax.scatter(data.loc[labels_known.isna(), x_col], data.loc[labels_known.isna(), y_col],\n               c='lightgrey', s=15, label='unlabeled', zorder=1)\n    ax.scatter(data.loc[labeled_mask, x_col], data.loc[labeled_mask, y_col],\n               c=labels_known[labeled_mask].astype('category').cat.codes,\n               cmap='tab10', s=60, zorder=2, edgecolors='black', linewidths=0.5)\n    ax.set_xlabel(x_col)\n    ax.set_ylabel(y_col)\n    ax.set_title(f'{x_col} vs {y_col}')\nplt.tight_layout()\n\ndata[\"label\"] = labels_known.fillna(\"unlabeled\").astype(str)\n\nfig3d = px.scatter_3d(\n    data, x=\"Sensor 2\", y=\"Sensor 13\", z=\"Sensor 9\",\n    color=\"Label\",\n    color_discrete_map={\"unlabeled\": \"lightgrey\"},\n    opacity=0.7,\n    title=\"Interesting columns — labeled breakdowns on top of unlabeled\"\n)\nfig3d.update_traces(marker_size=4)\nfig3d.show()"
+  },
+  {
+    "objectID": "analysis.html#feature-analysis-part-2",
+    "href": "analysis.html#feature-analysis-part-2",
+    "title": "Introduction",
+    "section": "Feature analysis part 2",
+    "text": "Feature analysis part 2\nIt seems that we are dealing with a featureset that does not have much structure in the majority of the columns.\nLet’s go back to look at the sensors data more in depth to see if there is nuggets of signal to be found.\nSensors 2, 9 and 13 seem to have distinct value distribitions from the rest, which seem about uniform.\n\n\nCode\nintersting_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\nfig, axes = plt.subplots(4, 5, figsize=(16, 12))\nfor ax, col in zip(axes.flat, feature_cols):\n    ax.hist(data[col], bins=30, edgecolor='none')\n    ax.set_title(col, fontsize=9)\n    ax.set_yticks([])\n    if col in intersting_cols:\n        for spine in ax.spines.values():\n            spine.set_edgecolor('red')\n            spine.set_linewidth(3)\nplt.suptitle('Feature distributions', y=1.01)\nplt.tight_layout()\n\n\n\n\n\n\n\n\n\nLooking at these 3 columns has the added benefit that we can easily visualize.\n\n\nCode\nfrom itertools import combinations\n\nsensor_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\npairs = list(combinations(sensor_cols, 2))\nlabeled_mask = labels_known.notna()\n\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\nfor ax, (x_col, y_col) in zip(axes, pairs):\n    ax.scatter(data.loc[labels_known.isna(), x_col], data.loc[labels_known.isna(), y_col],\n               c='lightgrey', s=15, label='unlabeled', zorder=1)\n    ax.scatter(data.loc[labeled_mask, x_col], data.loc[labeled_mask, y_col],\n               c=labels_known[labeled_mask].astype('category').cat.codes,\n               cmap='tab10', s=60, zorder=2, edgecolors='black', linewidths=0.5)\n    ax.set_xlabel(x_col)\n    ax.set_ylabel(y_col)\n    ax.set_title(f'{x_col} vs {y_col}')\nplt.tight_layout()\n\ndata[\"label\"] = labels_known.fillna(\"unlabeled\").astype(str)\n\nfig3d = px.scatter_3d(\n    data, x=\"Sensor 2\", y=\"Sensor 13\", z=\"Sensor 9\",\n    color=\"Label\",\n    color_discrete_map={\"unlabeled\": \"lightgrey\"},\n    opacity=0.7,\n    title=\"Interesting columns — labeled breakdowns on top of unlabeled\"\n)\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n                            \n                                            \n\n\n\n\n\n\n\n\n\nThis shows that the data follow a clear geometrical pattern that we should be able to uncover using clustering."
+  },
+  {
+    "objectID": "analysis.html#next-steps",
+    "href": "analysis.html#next-steps",
+    "title": "Introduction",
+    "section": "Next steps",
+    "text": "Next steps\nIf we want to build this out to a live outage classifier system I would suggest the following approach:\n\nLabel more data to see how well this classifier extrapolates as we only evaluate on training data now. This would allow us to evaluate the labelling of currently unlabeled data.\nExplore possibility of training a normal non-linear classifier on the full set of labelled data as it’s a more robust approach.\nDeploy model such that new breakdowns can be classified in real-time."
+  },
+  {
+    "objectID": "presentation.html#analysis",
+    "href": "presentation.html#analysis",
+    "title": "Clustering Sensor Data",
+    "section": "Analysis",
+    "text": "Analysis\nView full analysis notebook →"
+  },
+  {
+    "objectID": "presentation.html#analysis-solution",
+    "href": "presentation.html#analysis-solution",
+    "title": "Clustering Sensor Data",
+    "section": "Analysis & Solution",
+    "text": "Analysis & Solution\nView full analysis notebook →"
+  },
+  {
+    "objectID": "presentation.html#system-setup",
+    "href": "presentation.html#system-setup",
+    "title": "Clustering Sensor Data",
+    "section": "System setup:",
+    "text": "System setup:\nSimple FastAPI endpoint that receives sensor data from event triggered on breakdown"
+  },
+  {
+    "objectID": "presentation.html#outage-classifiaction-setup",
+    "href": "presentation.html#outage-classifiaction-setup",
+    "title": "Clustering Sensor Data",
+    "section": "Outage classifiaction setup:",
+    "text": "Outage classifiaction setup:\nSimple FastAPI endpoint that receives sensor data from event triggered on breakdown"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-1",
+    "href": "presentation.html#deployment-value-1",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\nOutage classifiaction setup\n\nBreakdown triggers and event that sends current sensor status to model\nModel endpoint that receives sensor data from event triggered on breakdown\nReturns predicted outage category, which can be handled to resolve quicker"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-2",
+    "href": "presentation.html#deployment-value-2",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\nOutage classifiaction setup\n\nBreakdown triggers and event that sends current sensor status to model\nModel endpoint that receives sensor data from event triggered on breakdown\nReturns predicted outage category, which can be handled to resolve quicker"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-extended",
+    "href": "presentation.html#deployment-value-extended",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value Extended",
+    "text": "Deployment & Value Extended\nMore value could be provided to Customer A by building a forward looking model on sensor timeseries data as they could intervene before the outage happens.\n\nOutage forecasting setup\n\nWith small time intervals constantly sending sensor timeseries to model\nModel endpoint that receives sensor data and predicts outage + type\nModel sends out alerts that allow for manual intervention"
+  }
+]

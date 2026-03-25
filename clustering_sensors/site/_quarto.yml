@@ -1,0 +1,25 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "Clustering Sensor Data"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Overview
+      - href: analysis.ipynb
+        text: Analysis
+      - href: presentation.qmd
+        text: Slides
+
+execute:
+  plotly-connected: true
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-fold: true
+
+jupyter: ml6-clustering

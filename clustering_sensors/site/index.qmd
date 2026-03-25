@@ -1,0 +1,20 @@
+---
+title: "Clustering Sensor Data — ML6 Case Study"
+---
+
+## Problem
+
+Customer A collects data from **20 sensors** on a machine. Of 1600 observed breakdowns:
+
+- **40** are expert-labeled with breakdown reasons
+- **1560** are unlabeled
+
+**Goal:** Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups.
+
+## Approach
+
+*To be filled in during analysis.*
+
+## Results
+
+*To be filled in during analysis.*
