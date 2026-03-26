@@ -9,7 +9,7 @@
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.9.36">
 
-  <title>Clustering Sensor Data</title>
+  <title>ML6 Senior Engineer Challenge – Clustering Sensor Data</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -209,19 +209,21 @@
 <li>Experts have manually labelled <strong>40</strong> of these into <strong>3 failure categories</strong></li>
 <li><strong>Goal:</strong> use the 40 labels to classify all 1560 unlabelled breakdowns</li>
 </ul>
+<div class="fragment">
 <p><strong>Why does this matter?</strong></p>
 <ul>
 <li>Saves manual labelling time</li>
 <li>Enables real-time breakdown classification → faster resolution</li>
 <li>Uncovers patterns to prevent future breakdowns</li>
 </ul>
+</div>
 </section>
 <section id="analysis-solution" class="slide level2">
 <h2>Analysis &amp; Solution</h2>
-<p><a href="analysis.html">View full analysis notebook →</a></p>
+<p><a href="clustering_sensors/site/analysis.html">View full analysis notebook →</a></p>
 </section>
-<section id="deployment-value" class="slide level2">
-<h2>Deployment &amp; Value</h2>
+<section id="deployment" class="slide level2">
+<h2>Deployment</h2>
 <ul>
 <li>Model packaged as an <strong>OutageClusterer</strong> class with a sklearn-style interface (<a href="https://github.com/wissebarkhof/ml6/blob/main/clustering_sensors/src/model.py">source</a>):</li>
 </ul>
@@ -233,32 +235,37 @@
 <li>Served via a <strong>FastAPI</strong> endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category.</li>
 </ul>
 <div class="fragment">
-<h3 id="prerequisites">Prerequisites</h3>
+<ul>
+<li>On Google Cloud this can be containerised and deployed to Cloud Run, which scales to 0 if not used.</li>
+</ul>
+</div>
+<div class="fragment">
+<p><strong>Prerequisites before deployment</strong></p>
 <ol type="1">
-<li><p><strong>Label more data</strong> to see how well this classifier extrapolates as we only evaluate on training data now. This would allow us to evaluate the labelling of currently unlabeled data.</p></li>
-<li><p>Explore possibility of training a normal <strong>non-linear classifier</strong> on the full set of labelled data as it’s a more robust approach.</p></li>
+<li><strong>Label more data</strong> — currently we only evaluate on training data. For validating this logic as a classifier, 100 more labels would be needed.</li>
+<li><strong>Consider a non-linear classifier</strong> on the full labelled set as a more robust solution</li>
 </ol>
 </div>
 </section>
-<section id="deployment-value-1" class="slide level2">
-<h2>Deployment &amp; Value</h2>
-<p>Outage classifiaction setup</p>
+<section id="deployment-architecture" class="slide level2">
+<h2>Deployment Architecture</h2>
+<p>Outage classification setup</p>
 <ul>
-<li><p>Breakdown triggers and event that sends current sensor status to model</p></li>
-<li><p>Model endpoint that receives sensor data from event triggered on breakdown</p></li>
-<li><p>Returns predicted outage category, which can be handled to resolve quicker</p></li>
+<li><p>Breakdown triggers and <strong>event that sends current sensor status</strong> to model</p></li>
+<li><p>Model <strong>endpoint</strong> that receives sensor data from event triggered on breakdown</p></li>
+<li><p>Returns predicted <strong>outage category</strong>, which can be handled to <strong>resolve the problem quicker</strong> by sending alerts to the dedicated experts.</p></li>
 </ul>
 
-<img data-src="images/simple_deployment.png" class="r-stretch"></section>
-<section id="deployment-value-extended" class="slide level2">
-<h2>Deployment &amp; Value Extended</h2>
+<img data-src="images/simple_deployment.png" class="quarto-figure quarto-figure-center r-stretch" style="width:80.0%"></section>
+<section id="value-extended" class="slide level2">
+<h2>Value Extended</h2>
 <p>More value could be provided to Customer A by building a forward looking model on sensor timeseries data as they could intervene <strong>before</strong> the outage happens.</p>
 
-<img data-src="images/extended_deployment.png" class="r-stretch"><p>Outage forecasting setup</p>
+<img data-src="images/extended_deployment.png" class="quarto-figure quarto-figure-center r-stretch" style="width:80.0%"><p>Outage forecasting setup</p>
 <ul>
-<li><p>With small time intervals constantly sending sensor timeseries to model</p></li>
-<li><p>Model endpoint that receives sensor data and predicts outage + type</p></li>
-<li><p>Model sends out alerts that allow for manual intervention</p></li>
+<li><p>With <strong>small time intervals</strong>, sending sensor timeseries to model</p></li>
+<li><p>Model endpoint that receives sensor data and predicts <strong>outage + type</strong></p></li>
+<li><p>Model sends out alerts that allow for manual <strong>intervention and prevention</strong></p></li>
 </ul>
 </section>
 <section id="roadmap" class="slide level2 smaller">
@@ -290,7 +297,7 @@
 <tr class="even">
 <td>2</td>
 <td>Validate classifier on additional labelled data</td>
-<td>Label ~100 more breakdowns</td>
+<td>Label 100 more breakdowns</td>
 <td>Medium (delay)</td>
 </tr>
 <tr class="odd">
@@ -332,7 +339,7 @@
 </tr>
 <tr class="even">
 <td>6</td>
-<td>Build timeseries lookahead classifier</td>
+<td>Build timeseries classifier</td>
 <td>—</td>
 <td>High</td>
 </tr>
@@ -350,7 +357,7 @@
 </tr>
 </tbody>
 </table>
-<p><em>Weeks 1–5 (Junior + PM) run in parallel with weeks 6–9 (Senior Engineer) once the data dependency is resolved.</em></p>
+<p><em>Weeks 1–5 (Junior Engineer) run in parallel with weeks 6–9 (Senior Engineer) once the data dependency is resolved.</em></p>
 </div>
 </section>
 <section>
@@ -364,27 +371,239 @@
 <li>Customer B has gathered <strong>video data of soccer games</strong></li>
 <li>Goal: determine <strong>how many players per team</strong> are visible on screen at any given time</li>
 </ul>
+<div class="fragment">
 <p><strong>Why does this matter?</strong></p>
 <ul>
-<li>…</li>
+<li>Combined with position on the field this can guide offensive or defensive actions and <strong>calculate further statistics for trainers</strong></li>
+<li>Assistance to <strong>commentators in real-time</strong></li>
+</ul>
+</div>
+<div class="fragment">
+<p>I will present some approaches that we can weigh</p>
+</div>
+</section>
+<section id="self-hosted-approach-12" class="slide level2">
+<h2>Self-hosted approach 1&amp;2</h2>
+<h3 id="prelimenary-detection">Prelimenary: detection</h3>
+<p>Both approaches start with detecting all people in each frame:</p>
+<ul>
+<li><strong>Detectron2</strong> (Meta) — Apache 2.0, free for commercial use</li>
+<li><strong>YOLO</strong> (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use
+<ul>
+<li><em>Pro:</em> has a pretrained football model</li>
+</ul></li>
+</ul>
+<p>Outputs: one bounding box per person per frame</p>
+</section>
+<section id="approach-1-unsupervised-inspiration" class="slide level2">
+<h2>Approach 1: Unsupervised <a href="https://github.com/roboflow/sports/blob/main/sports/common/team.py">(inspiration)</a></h2>
+<ol type="1">
+<li><strong>Embed</strong> each player crop using an image model
+<ul>
+<li>CLIP (OpenAI) or SigLIP (Google)</li>
+</ul></li>
+<li><strong>Filter</strong> referees &amp; non-players</li>
+<li><strong>Dimensionality reduction</strong> — UMAP</li>
+<li><strong>Cluster</strong> — K-Means (n=2)</li>
+<li><strong>Count</strong> per cluster per frame</li>
+</ol>
+
+<img data-src="images/unsupervised_model.png" class="quarto-figure quarto-figure-center r-stretch" style="width:80.0%"></section>
+<section id="approach-1-unsupervised-inspiration-1" class="slide level2">
+<h2>Approach 1: Unsupervised <a href="https://github.com/roboflow/sports/blob/main/sports/common/team.py">(inspiration)</a></h2>
+<ol type="1">
+<li><strong>Embed</strong> each player crop using an image model
+<ul>
+<li>CLIP (OpenAI) or SigLIP (Google)</li>
+</ul></li>
+<li><strong>Filter</strong> referees &amp; non-players</li>
+<li><strong>Dimensionality reduction</strong> — UMAP</li>
+<li><strong>Cluster</strong> — K-Means (n=2)</li>
+<li><strong>Count</strong> per cluster per frame</li>
+</ol>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>No need for generating labels</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li><p>Might be imprecise</p></li>
+<li><p>Filter non-playes non-trivial (YOLO might help here)</p></li>
+<li><p>Need to host 2 models (object detection + embedding)</p></li>
 </ul>
 </section>
-<section id="approach" class="slide level2">
-<h2>Approach</h2>
+<section id="approach-2-zero-shot-with-clip" class="slide level2">
+<h2>Approach 2: Zero-shot with CLIP</h2>
+<ol type="1">
+<li><strong>Score</strong> each player crop against text labels using CLIP
 <ul>
-<li>…</li>
+<li>Examples: <code>"player in red"</code>, <code>"player in white"</code>, <code>"referee"</code></li>
+</ul></li>
+<li><strong>Assign</strong> the label with the highest score</li>
+<li><strong>Count</strong> per label per frame</li>
+</ol>
+
+<img data-src="images/zero_shot_model.png" class="quarto-figure quarto-figure-center r-stretch" style="width:80.0%"></section>
+<section id="approach-2-zero-shot-with-clip-1" class="slide level2">
+<h2>Approach 2: Zero-shot with CLIP</h2>
+<ol type="1">
+<li><strong>Score</strong> each player crop against text labels using CLIP
+<ul>
+<li>Examples: <code>"player in red"</code>, <code>"player in white"</code>, <code>"referee"</code></li>
+</ul></li>
+<li><strong>Assign</strong> the label with the highest score</li>
+<li><strong>Count</strong> per label per frame</li>
+</ol>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>Might be more precise than unsupervised</li>
+<li>Scales to other use cases more easily</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Generating text-labels non-trivial</li>
+<li>Need to host 2 models (object detection + classifcation)</li>
 </ul>
 </section>
-<section id="deployment-value-2" class="slide level2">
-<h2>Deployment &amp; Value</h2>
+<section id="approach-3-managed-vision-apis" class="slide level2">
+<h2>Approach 3: Managed Vision APIs</h2>
 <ul>
-<li>…</li>
+<li>Several managed APIs exist (Google Video Intelligence, AWS Rekognition, Azure Video Indexer, Roboflow)</li>
+<li>Selection depends on client infrastructure preferences and quality vs cost benchmarking</li>
+</ul>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>Easy to implement and prototype</li>
+<li>Cheaper for small volumes</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Propieritary data leaves your company</li>
+<li>Expensive for large volumes</li>
+<li>Vendor lock-in</li>
+</ul>
+</section>
+<section id="approach-comparison" class="slide level2 smaller">
+<h2>Approach Comparison</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Unsupervised</th>
+<th>Zero-shot</th>
+<th>Managed API</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Precision</strong></td>
+<td>Lower</td>
+<td>Higher</td>
+<td>High</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Text labels needed</strong></td>
+<td>No</td>
+<td>Yes</td>
+<td>No</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Models to host</strong></td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>License</strong></td>
+<td>Apache 2.0/AGPL-3.0</td>
+<td>Apache 2.0/AGPL-3.0</td>
+<td>Proprietary</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Data leaves premises</strong></td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Cost at scale</strong></td>
+<td>Low</td>
+<td>Low</td>
+<td>High</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td><strong>Implementation effort</strong></td>
+<td>High</td>
+<td>High</td>
+<td>Low</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="deployment-1" class="slide level2">
+<h2>Deployment</h2>
+<p>In order to determine the deployment of these approaches, we need to know:</p>
+<ul>
+<li><strong>Batch vs Real-time</strong>:
+<ul>
+<li>For <strong>batch</strong> predictions that we can run at request or scheduled, latency is less of an issue. GPU preemptible.</li>
+<li>For <strong>real-time inference</strong> we need to build for speed. Managed APIs are probably not an option due to network delays. Live GPU instance.</li>
+</ul></li>
+<li><strong>Low or high-volume</strong>:
+<ul>
+<li><strong>Low volumes</strong> could be cheaper through a managed API.</li>
+<li>High volumes are better self-hosted as the cost scales better.</li>
+</ul></li>
+</ul>
+<div class="fragment">
+<p><strong>Note:</strong> The managed API approach has a hard requirement of data leaving the premise.</p>
+</div>
+</section>
+<section id="deployment-for-self-hosted-batch-processing" class="slide level2">
+<h2>Deployment for self-hosted batch processing</h2>
+<ul>
+<li><strong>Scheduled job</strong> that polls every (6, 12, 24) hours for new videos uploaded</li>
+<li><strong>Spin up single GPU</strong> (like T4) should be enough to run both models (sequentially)</li>
+<li><strong>Timestamped predictions</strong> uploaded to data warehouse for further processing</li>
+</ul>
+</section>
+<section id="deployment-for-self-hosted-real-time-processing" class="slide level2">
+<h2>Deployment for self-hosted real-time processing</h2>
+<ul>
+<li><strong>Endpoint</strong> for model inference on a video stream</li>
+<li><strong>Constant live GPU</strong> (like T4) to run both models
+<ul>
+<li>Scale horizontally if we need multiple concurrency</li>
+</ul></li>
+<li><strong>Live predictions</strong> stream</li>
 </ul>
 </section>
 <section id="roadmap-1" class="slide level2 smaller">
 <h2>Roadmap</h2>
+<p>Our recommended road-map is to - Prototype with managed Vision APIs (MVP) - Build out own solution if proven value</p>
 <div style="font-size: 0.55em">
 <table class="caption-top">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 29%">
+<col style="width: 37%">
+<col style="width: 16%">
+</colgroup>
 <thead>
 <tr class="header">
 <th>Week</th>
@@ -396,16 +615,56 @@
 <tbody>
 <tr class="odd">
 <td>1</td>
-<td>…</td>
-<td>…</td>
-<td>…</td>
+<td>Ideation + requirement collection (done)</td>
+<td>Requirements</td>
+<td>Low</td>
+</tr>
+<tr class="even">
+<td>2 &amp; 3</td>
+<td>Managed API protyping</td>
+<td>Quality assessment</td>
+<td>Low</td>
+</tr>
+<tr class="odd">
+<td>4 - 6</td>
+<td>Develop self-hosted model</td>
+<td>Labelled validation data</td>
+<td>High</td>
+</tr>
+<tr class="even">
+<td>7 &amp; 8</td>
+<td>Deploy self-hosted approach</td>
+<td>Infrastructure access</td>
+<td>Medium</td>
 </tr>
 </tbody>
 </table>
 </div>
-
-
+</section>
+<section id="open-questions-sports-analytics" class="slide level2">
+<h2>Open Questions Sports Analytics</h2>
+<ol type="1">
+<li>How much data have they collected? Is it annotated?</li>
+<li>What is the resolution of inference.</li>
+</ol>
+<ul>
+<li>“At any given time” is constant/streaming</li>
+<li>Does it need to be real-time?</li>
+</ul>
+<ol start="3" type="1">
+<li>Is all the data from the same camera/field/position or is it wildly different?</li>
+</ol>
 </section></section>
+<section id="appendix" class="title-slide slide level1 center">
+<h1>Appendix</h1>
+<p>Timeseries outage prediction 1. Collect timeseries sensor data before these 1600 outages + ~1600 points in well operating times. - Length depends on the resolution and structure of the data - Label will be wether an outage occured in predetermined window that leaves customer with ample time to respond.</p>
+<ol start="2" type="1">
+<li><p>Extract features like lagged values, seasonal patterns, trends.</p></li>
+<li><p>Train a non-linear classifier like gradient boosting tree to classify outage vs non-outage.</p></li>
+</ol>
+
+
+</section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">

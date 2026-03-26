@@ -1,8 +1,8 @@
 ---
-title: "Clustering Sensor Data — ML6 Case Study"
+title: "ML6 Senior Engineer Challenge"
 ---
 
-## Problem
+## Use Case 1 — Clustering Sensor Data
 
 Customer A collects data from **20 sensors** on a machine. Of 1600 observed breakdowns:
 
@@ -11,10 +11,8 @@ Customer A collects data from **20 sensors** on a machine. Of 1600 observed brea
 
 **Goal:** Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups.
 
-## Approach
+## Use Case 2 — Sports Analytics
 
-*To be filled in during analysis.*
+Customer B has gathered **video data of soccer games**.
 
-## Results
-
-*To be filled in during analysis.*
+**Goal:** Determine how many players per team are visible on screen at any given time.

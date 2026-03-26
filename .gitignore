@@ -62,3 +62,6 @@ logs/
 # Temporary files
 tmp/
 temp/
+
+/.quarto/
+**/*.quarto_ipynb

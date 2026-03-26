@@ -1,0 +1,464 @@
+[
+  {
+    "objectID": "clustering_sensors/site/analysis.html",
+    "href": "clustering_sensors/site/analysis.html",
+    "title": "Introduction",
+    "section": "",
+    "text": "Code\nimport plotly.io as pio\npio.renderers.default = \"notebook_connected\"\nimport pandas as pd\nimport numpy as np\nimport seaborn as sns\nimport matplotlib.pyplot as plt\nCustomer A is experiencing breakdowns on a machine which is causing delays in production. In recent times this has happened 1600 times and we have access to the sensor states at those times.\nEngineers from customer A have been able to categorise 40 of these breakdowns into 3 main categories.\nThe goal of this project is to use the small section of labelled data to extrapolate to unlablled breakdowns. This has two functions: 1. The manual labelling can be time-intensive so this would save the customer time into analysis which category is most prevalent and needs most urgent attention. 2. The model that we obtain can be used to predict breakdown reason in real-time that saves trouble-shooting and reduces the time to resolve and resume production. 3. Insights from the model can be used to prevent further model breakdown.\nThis can be solved using a semi-supervised machine learning methods.\nThis analysis will dig into the data and aim to guide a solution."
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#feature-analysis-part-2",
+    "href": "clustering_sensors/site/analysis.html#feature-analysis-part-2",
+    "title": "Introduction",
+    "section": "Feature analysis part 2",
+    "text": "Feature analysis part 2\nIt seems that we are dealing with a featureset that does not have much structure in the majority of the columns.\nLet’s go back to look at the sensors data more in depth to see if there is nuggets of signal to be found.\nSensors 2, 9 and 13 seem to have distinct value distribitions from the rest, which seem about uniform.\n\n\nCode\nintersting_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\nfig, axes = plt.subplots(4, 5, figsize=(16, 12))\nfor ax, col in zip(axes.flat, feature_cols):\n    ax.hist(data[col], bins=30, edgecolor='none')\n    ax.set_title(col, fontsize=9)\n    ax.set_yticks([])\n    if col in intersting_cols:\n        for spine in ax.spines.values():\n            spine.set_edgecolor('red')\n            spine.set_linewidth(3)\nplt.suptitle('Feature distributions', y=1.01)\nplt.tight_layout()\n\n\n\n\n\n\n\n\n\nLooking at these 3 columns has the added benefit that we can easily visualize.\n\n\nCode\nfrom itertools import combinations\n\nsensor_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\npairs = list(combinations(sensor_cols, 2))\nlabeled_mask = labels_known.notna()\n\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\nfor ax, (x_col, y_col) in zip(axes, pairs):\n    ax.scatter(data.loc[labels_known.isna(), x_col], data.loc[labels_known.isna(), y_col],\n               c='lightgrey', s=15, label='unlabeled', zorder=1)\n    ax.scatter(data.loc[labeled_mask, x_col], data.loc[labeled_mask, y_col],\n               c=labels_known[labeled_mask].astype('category').cat.codes,\n               cmap='tab10', s=60, zorder=2, edgecolors='black', linewidths=0.5)\n    ax.set_xlabel(x_col)\n    ax.set_ylabel(y_col)\n    ax.set_title(f'{x_col} vs {y_col}')\nplt.tight_layout()\n\ndata[\"label\"] = labels_known.fillna(\"unlabeled\").astype(str)\n\nfig3d = px.scatter_3d(\n    data, x=\"Sensor 2\", y=\"Sensor 13\", z=\"Sensor 9\",\n    color=\"Label\",\n    color_discrete_map={\"unlabeled\": \"lightgrey\"},\n    opacity=0.7,\n    title=\"Interesting columns — labeled breakdowns on top of unlabeled\"\n)\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n                            \n                                            \n\n\n\n\n\n\n\n\n\nThis shows that the data follow a clear geometrical pattern that we should be able to uncover using clustering."
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#next-steps",
+    "href": "clustering_sensors/site/analysis.html#next-steps",
+    "title": "Introduction",
+    "section": "Next steps",
+    "text": "Next steps\nIf we want to build this out to a live outage classifier system I would suggest the following approach:\n\nLabel more data to see how well this classifier extrapolates as we only evaluate on training data now. This would allow us to evaluate the labelling of currently unlabeled data.\nExplore possibility of training a normal non-linear classifier on the full set of labelled data as it’s a more robust approach.\nDeploy model such that new breakdowns can be classified in real-time."
+  },
+  {
+    "objectID": "presentation.html#problem-statement",
+    "href": "presentation.html#problem-statement",
+    "title": "Clustering Sensor Data",
+    "section": "Problem Statement",
+    "text": "Problem Statement\n\nMachine at Customer A has broken down 1600 times\nExperts have manually labelled 40 of these into 3 failure categories\nGoal: use the 40 labels to classify all 1560 unlabelled breakdowns\n\n\nWhy does this matter?\n\nSaves manual labelling time\nEnables real-time breakdown classification → faster resolution\nUncovers patterns to prevent future breakdowns"
+  },
+  {
+    "objectID": "presentation.html#analysis-solution",
+    "href": "presentation.html#analysis-solution",
+    "title": "Clustering Sensor Data",
+    "section": "Analysis & Solution",
+    "text": "Analysis & Solution\nView full analysis notebook →"
+  },
+  {
+    "objectID": "presentation.html#deployment-value",
+    "href": "presentation.html#deployment-value",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\n\nModel packaged as an OutageClusterer class with a sklearn-style interface (source):\n\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk\n\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category.\n\n\nPrerequisites before go-live\n\nLabel more data — currently we only evaluate on training data; ~100 more labels would allow proper validation\nConsider a non-linear classifier on the full labelled set as a more robust alternative"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-1",
+    "href": "presentation.html#deployment-value-1",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\nIn order to determine the deployment of these approaches, we need to know:\n\nBatch:\n\nNo\n\nReal-time: Are we trying to track the team’s players in real-time or is this a batch prediction job that can run daily or incedentally on collected footage.\nLow or high-volume:\n…"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-extended",
+    "href": "presentation.html#deployment-value-extended",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value Extended",
+    "text": "Deployment & Value Extended\nMore value could be provided to Customer A by building a forward looking model on sensor timeseries data as they could intervene before the outage happens.\n\nOutage forecasting setup\n\nWith small time intervals constantly sending sensor timeseries to model\nModel endpoint that receives sensor data and predicts outage + type\nModel sends out alerts that allow for manual intervention"
+  },
+  {
+    "objectID": "presentation.html#roadmap",
+    "href": "presentation.html#roadmap",
+    "title": "Clustering Sensor Data",
+    "section": "Roadmap",
+    "text": "Roadmap\n\nSimple\n\n\n\n\n\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n1\nFeasibility study & model development (done)\nProvide labelled data (done)\nLow\n\n\n2\nValidate classifier on additional labelled data\nLabel 100 more breakdowns\nMedium (delay)\n\n\n3–4\nBuild & test deployment pipeline\nAccess to infrastructure\nMedium\n\n\n5\nModel monitoring & alerting setup\n-\nLow\n\n\n\nExtended\n\n\n\n\n\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n—\nDependency: historical timeseries data available\nProvide timeseries export\nHigh\n\n\n6\nBuild timeseries classifier\n—\nHigh\n\n\n7–8\nDeploy timeseries classifier\nAccess to infrastructure\nMedium\n\n\n9\nMonitoring & alerting for timeseries model\nDefine intervention thresholds\nLow\n\n\n\nWeeks 1–5 (Junior Engineer) run in parallel with weeks 6–9 (Senior Engineer) once the data dependency is resolved."
+  },
+  {
+    "objectID": "presentation.html#problem-statement-1",
+    "href": "presentation.html#problem-statement-1",
+    "title": "Clustering Sensor Data",
+    "section": "Problem Statement",
+    "text": "Problem Statement\n\nCustomer B has gathered video data of soccer games\nGoal: determine how many players per team are visible on screen at any given time\n\n\nWhy does this matter?\n\nCombined with position on the field this can guide offensive or defensive actions and calculate further statistics for trainers\nAssistance to commentators in real-time\n\n\n\nI will present some approaches that we can weigh"
+  },
+  {
+    "objectID": "presentation.html#approach",
+    "href": "presentation.html#approach",
+    "title": "Clustering Sensor Data",
+    "section": "Approach",
+    "text": "Approach\n\n…"
+  },
+  {
+    "objectID": "presentation.html#deployment-value-2",
+    "href": "presentation.html#deployment-value-2",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment & Value",
+    "text": "Deployment & Value\n\n…"
+  },
+  {
+    "objectID": "presentation.html#roadmap-1",
+    "href": "presentation.html#roadmap-1",
+    "title": "Clustering Sensor Data",
+    "section": "Roadmap",
+    "text": "Roadmap\nOur recommended road-map is to - Prototype with managed Vision APIs (MVP) - Build out own solution if proven value\n\n\n\n\n\n\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n1\nIdeation + requirement collection (done)\nRequirements\nLow\n\n\n2 & 3\nManaged API protyping\nQuality assessment\nLow\n\n\n4 - 6\nDevelop self-hosted model\nLabelled validation data\nHigh\n\n\n7 & 8\nDeploy self-hosted approach\nInfrastructure access\nMedium"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "ML6 Senior Engineer Challenge",
+    "section": "",
+    "text": "Customer A collects data from 20 sensors on a machine. Of 1600 observed breakdowns:\n\n40 are expert-labeled with breakdown reasons\n1560 are unlabeled\n\nGoal: Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups."
+  },
+  {
+    "objectID": "index.html#use-case-1-clustering-sensor-data",
+    "href": "index.html#use-case-1-clustering-sensor-data",
+    "title": "ML6 Senior Engineer Challenge",
+    "section": "",
+    "text": "Customer A collects data from 20 sensors on a machine. Of 1600 observed breakdowns:\n\n40 are expert-labeled with breakdown reasons\n1560 are unlabeled\n\nGoal: Use the 40 labeled points to guide clustering of all 1600 breakdowns into meaningful groups."
+  },
+  {
+    "objectID": "index.html#use-case-2-sports-analytics",
+    "href": "index.html#use-case-2-sports-analytics",
+    "title": "ML6 Senior Engineer Challenge",
+    "section": "Use Case 2 — Sports Analytics",
+    "text": "Use Case 2 — Sports Analytics\nCustomer B has gathered video data of soccer games.\nGoal: Determine how many players per team are visible on screen at any given time."
+  },
+  {
+    "objectID": "presentation.html#open-questions-sports-analys",
+    "href": "presentation.html#open-questions-sports-analys",
+    "title": "Clustering Sensor Data",
+    "section": "Open Questions Sports Analys",
+    "text": "Open Questions Sports Analys"
+  },
+  {
+    "objectID": "presentation.html#open-questions-sports-analytics",
+    "href": "presentation.html#open-questions-sports-analytics",
+    "title": "Clustering Sensor Data",
+    "section": "Open Questions Sports Analytics",
+    "text": "Open Questions Sports Analytics\n\nHow much data have they collected? Is it annotated?\nWhat is the resolution of inference.\n\n\n“At any given time” is constant/streaming\nDoes it need to be real-time?\n\n\nIs all the data from the same camera/field/position or is it wildly different?"
+  },
+  {
+    "objectID": "presentation.html#embedd-the-crops-using-an-image-model",
+    "href": "presentation.html#embedd-the-crops-using-an-image-model",
+    "title": "Clustering Sensor Data",
+    "section": "2. Embedd the crops using an image model",
+    "text": "2. Embedd the crops using an image model\nFilter referee & other non-players Use a pretrained vision model to generate embeddings of the\n\n…"
+  },
+  {
+    "objectID": "presentation.html#approach-1",
+    "href": "presentation.html#approach-1",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1:",
+    "text": "Approach 1:\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\nUnsupervised algorithm (inspiration)\n\nEmbedd the crops using an image model\n\n\n\nOpenAI CLIP\n\n\nSiglipVisionModel (Google)\n\n\n\nFilter referee & non-players\nDimensionality reduction\n\n\nUMAP\n\n\nK-Means(n=2)\nGroup by cluster & count"
+  },
+  {
+    "objectID": "presentation.html#approach-2",
+    "href": "presentation.html#approach-2",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 2",
+    "text": "Approach 2\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\nZero-shot learning\n\nUse CLIP from OpenAI to score against labels like “player from Team A”, “player from Team B”\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#approach-zero-shot",
+    "href": "presentation.html#approach-zero-shot",
+    "title": "Clustering Sensor Data",
+    "section": "Approach Zero-shot",
+    "text": "Approach Zero-shot\n\nGrounding DINO with prompts like “soccer player in red jersey”, “soccer player in white jersey”, “referee”\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#approach-unsupervised",
+    "href": "presentation.html#approach-unsupervised",
+    "title": "Clustering Sensor Data",
+    "section": "Approach Unsupervised",
+    "text": "Approach Unsupervised\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\n\nEmbedd the crops using an image model\n\n\n\nOpenAI CLIP\n\n\nSiglipVisionModel (Google)\n\n\n\nFilter referee & non-players\nDimensionality reduction\n\n\nUMAP\n\n\nK-Means(n=2)\nGroup by cluster & count\n\n(inspiration)"
+  },
+  {
+    "objectID": "presentation.html#approach-unsupervi",
+    "href": "presentation.html#approach-unsupervi",
+    "title": "Clustering Sensor Data",
+    "section": "Approach Unsupervi",
+    "text": "Approach Unsupervi\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n\n(inspiration)\n\nEmbedd the crops using an image model\n\n\n\nOpenAI CLIP\n\n\nSiglipVisionModel (Google)\n\n\n\nFilter referee & non-players\nDimensionality reduction\n\n\nUMAP\n\n\nK-Means(n=2)\nGroup by cluster & count"
+  },
+  {
+    "objectID": "presentation.html#approach-zero-shot-learning",
+    "href": "presentation.html#approach-zero-shot-learning",
+    "title": "Clustering Sensor Data",
+    "section": "Approach Zero-shot learning",
+    "text": "Approach Zero-shot learning\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\n\n\nUse CLIP from OpenAI to score against labels like “player from Team A”, “player from Team B”\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#approach-2-zero-shot-learning",
+    "href": "presentation.html#approach-2-zero-shot-learning",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 2: Zero-shot Learning",
+    "text": "Approach 2: Zero-shot Learning\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\n\nUse CLIP from OpenAI to score against labels like “player from Team A”, “player from Team B”\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised-algorithm",
+    "href": "presentation.html#approach-1-unsupervised-algorithm",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised algorithm",
+    "text": "Approach 1: Unsupervised algorithm\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\n(inspiration)\n\nEmbedd the crops using an image model\n\n\n\nOpenAI CLIP\n\n\nSiglipVisionModel (Google)\n\n\n\nFilter referee & non-players\nDimensionality reduction\n\n\nUMAP\n\n\nK-Means(n=2)\nGroup by cluster & count"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised-learning",
+    "href": "presentation.html#approach-1-unsupervised-learning",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised Learning",
+    "text": "Approach 1: Unsupervised Learning\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-source: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\n\nEmbedd the crops using an image model\n\n\n\nOpenAI CLIP\n\n\nSiglipVisionModel (Google)\n\n\n\nFilter referee & non-players\nDimensionality reduction\n\n\nUMAP\n\n\nK-Means(n=2)\nGroup by cluster & count\n\n(inspiration)"
+  },
+  {
+    "objectID": "presentation.html#approach-2-zero-shot-learning-1",
+    "href": "presentation.html#approach-2-zero-shot-learning-1",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 2: Zero-shot Learning",
+    "text": "Approach 2: Zero-shot Learning\nObject detection\n\nUse a streaming object detection model to identify people in the frame\n\n\nOpen-souce: Detectron2 (Meta) (Apache 2.0 license)\nEnterprise License: YOLO Ultralytics even has football player detection - A demo can be made using under the AGPL-3.0 licence\n\nThen…\n. . .\n\nUse CLIP from OpenAI to score against labels like “player from Team A”, “player from Team B”\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#approach-3-zero-shot-learning",
+    "href": "presentation.html#approach-3-zero-shot-learning",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 3: Zero-shot Learning",
+    "text": "Approach 3: Zero-shot Learning\n\nGrounding DINO to score against labels like “player from Team A”, “player from Team B”\n\n\nHow does object detection work?\n\n\nAssign label with highest score\nGroup by label and count"
+  },
+  {
+    "objectID": "presentation.html#detection-shared-step",
+    "href": "presentation.html#detection-shared-step",
+    "title": "Clustering Sensor Data",
+    "section": "Detection (shared step)",
+    "text": "Detection (shared step)\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use; has a pretrained football model\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised-inspiration",
+    "href": "presentation.html#approach-1-unsupervised-inspiration",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised (inspiration)",
+    "text": "Approach 1: Unsupervised (inspiration)\n\nEmbed each player crop using an image model\n\nCLIP (OpenAI) or SigLIP (Google)\n\nFilter referees & non-players\nDimensionality reduction — UMAP\nCluster — K-Means (n=2)\nCount per cluster per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-2-zero-shot-with-clip",
+    "href": "presentation.html#approach-2-zero-shot-with-clip",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 2: Zero-shot with CLIP",
+    "text": "Approach 2: Zero-shot with CLIP\n\nScore each player crop against text labels using CLIP\n\nExamples: \"player in red\", \"player in white\", \"referee\"\n\nAssign the label with the highest score\nCount per label per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-3-zero-shot-with-grounding-dino",
+    "href": "presentation.html#approach-3-zero-shot-with-grounding-dino",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 3: Zero-shot with Grounding DINO",
+    "text": "Approach 3: Zero-shot with Grounding DINO\nDetection + classification in a single model:\n\nRun Grounding DINO with text prompts per frame\n\ne.g. \"player in red jersey\", \"player in white jersey\", \"referee\"\n\nCount matched boxes per prompt per frame\n\nPros:\n\nno separate detection step -&gt; simpler pipeline\nApache 2.0 licensed"
+  },
+  {
+    "objectID": "presentation.html#deployment-architecture",
+    "href": "presentation.html#deployment-architecture",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment Architecture",
+    "text": "Deployment Architecture\nOutage classification setup\n\nBreakdown triggers and event that sends current sensor status to model\nModel endpoint that receives sensor data from event triggered on breakdown\nReturns predicted outage category, which can be handled to resolve the problem quicker by sending alerts to the dedicated experts."
+  },
+  {
+    "objectID": "presentation.html#approach-4",
+    "href": "presentation.html#approach-4",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 4:",
+    "text": "Approach 4:"
+  },
+  {
+    "objectID": "presentation.html#approach-4-managed-vision-apis",
+    "href": "presentation.html#approach-4-managed-vision-apis",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 4: Managed Vision APIs",
+    "text": "Approach 4: Managed Vision APIs\n\nSeveral managed APIs exist (Google Video Intelligence, AWS Rekognition, Azure Video Indexer, Roboflow)\nSelection depends on client infrastructure preferences and quality vs cost benchmarking\n\nPros:\n\nEasy to implement and prototype\nCheaper for small volumes\n\nCons:\n\nPropieritary data leaves your company\nExpensive for large volumes\nVendor lock-in"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised",
+    "href": "presentation.html#approach-1-unsupervised",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised",
+    "text": "Approach 1: Unsupervised\n\nEmbed each player crop using an image model\n\nOpenAI CLIP, or SigLIP (Google)\n\nFilter referees & non-players\nDimensionality reduction — UMAP\nCluster — K-Means (n=2)\nCount per cluster per frame\n\ninspiration"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised-1",
+    "href": "presentation.html#approach-1-unsupervised-1",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised",
+    "text": "Approach 1: Unsupervised"
+  },
+  {
+    "objectID": "presentation.html#approach-2-zero-shot-with-clip-1",
+    "href": "presentation.html#approach-2-zero-shot-with-clip-1",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 2: Zero-shot with CLIP",
+    "text": "Approach 2: Zero-shot with CLIP\n\nScore each player crop against text labels using CLIP\n\nExamples: \"player in red\", \"player in white\", \"referee\"\n\nAssign the label with the highest score\nCount per label per frame\n\nPros:\n\nMight be more precise than unsupervised\nScales to other use cases more easily\n\nCons:\n\nGenerating text-labels non-trivial\nNeed to host 2 models (object detection + classifcation)"
+  },
+  {
+    "objectID": "presentation.html#cons",
+    "href": "presentation.html#cons",
+    "title": "Clustering Sensor Data",
+    "section": "Cons:",
+    "text": "Cons:"
+  },
+  {
+    "objectID": "presentation.html#pros",
+    "href": "presentation.html#pros",
+    "title": "Clustering Sensor Data",
+    "section": "Pros:",
+    "text": "Pros:\nCons: - Generating text-labels non-trivial"
+  },
+  {
+    "objectID": "presentation.html#approach-1-unsupervised-inspiration-1",
+    "href": "presentation.html#approach-1-unsupervised-inspiration-1",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1: Unsupervised (inspiration)",
+    "text": "Approach 1: Unsupervised (inspiration)\n\nEmbed each player crop using an image model\n\nCLIP (OpenAI) or SigLIP (Google)\n\nFilter referees & non-players\nDimensionality reduction — UMAP\nCluster — K-Means (n=2)\nCount per cluster per frame\n\nPros:\n\nNo need for generating labels\n\nCons:\n\nMight be imprecise\nFilter non-playes non-trivial (YOLO might help here)\nNeed to host 2 models (object detection + embedding)"
+  },
+  {
+    "objectID": "presentation.html#approach-comparison",
+    "href": "presentation.html#approach-comparison",
+    "title": "Clustering Sensor Data",
+    "section": "Approach Comparison",
+    "text": "Approach Comparison\n\n\n\n\n\n\n\n\n\n\n\nUnsupervised\nZero-shot\nManaged API\n\n\n\n\n\nPrecision\nLower\nHigher\nHigh\n\n\n\nText labels needed\nNo\nYes\nNo\n\n\n\nModels to host\n2\n2\n0\n\n\n\nLicense\nApache 2.0/AGPL-3.0\nApache 2.0/AGPL-3.0\nProprietary\n\n\n\nData leaves premises\nNo\nNo\nYes\n\n\n\nCost at scale\nLow\nLow\nHigh\n\n\n\nImplementation effort\nHigh\nHigh\nLow"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#feature-analysis",
+    "href": "clustering_sensors/site/analysis.html#feature-analysis",
+    "title": "Introduction",
+    "section": "Feature analysis",
+    "text": "Feature analysis\nIt seems that we are dealing with a featureset that does not have much structure in the majority of the columns.\nLet’s go back to look at the sensors data more in depth to see if there is nuggets of signal to be found.\nSensors 2, 9 and 13 seem to have distinct value distribitions from the rest, which seem about uniform.\n\n\nCode\nintersting_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\nfig, axes = plt.subplots(4, 5, figsize=(16, 12))\nfor ax, col in zip(axes.flat, feature_cols):\n    ax.hist(data[col], bins=30, edgecolor='none')\n    ax.set_title(col, fontsize=9)\n    ax.set_yticks([])\n    if col in intersting_cols:\n        for spine in ax.spines.values():\n            spine.set_edgecolor('red')\n            spine.set_linewidth(3)\nplt.suptitle('Feature distributions', y=1.01)\nplt.tight_layout()\n\n\n\n\n\n\n\n\n\nLooking at these 3 columns has the added benefit that we can easily visualize.\n\n\nCode\nfrom itertools import combinations\n\nsensor_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\npairs = list(combinations(sensor_cols, 2))\nlabeled_mask = labels_known.notna()\n\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\nfor ax, (x_col, y_col) in zip(axes, pairs):\n    ax.scatter(data.loc[labels_known.isna(), x_col], data.loc[labels_known.isna(), y_col],\n               c='lightgrey', s=15, label='unlabeled', zorder=1)\n    ax.scatter(data.loc[labeled_mask, x_col], data.loc[labeled_mask, y_col],\n               c=labels_known[labeled_mask].astype('category').cat.codes,\n               cmap='tab10', s=60, zorder=2, edgecolors='black', linewidths=0.5)\n    ax.set_xlabel(x_col)\n    ax.set_ylabel(y_col)\n    ax.set_title(f'{x_col} vs {y_col}')\nplt.tight_layout()\n\ndata[\"label\"] = labels_known.fillna(\"unlabeled\").astype(str)\n\nfig3d = px.scatter_3d(\n    data, x=\"Sensor 2\", y=\"Sensor 13\", z=\"Sensor 9\",\n    color=\"Label\",\n    color_discrete_map={\"unlabeled\": \"lightgrey\"},\n    opacity=0.7,\n    title=\"Interesting columns — labeled breakdowns on top of unlabeled\"\n)\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n                            \n                                            \n\n\n\n\n\n\n\n\n\nThis shows that the data follow a clear geometrical pattern that we should be able to uncover using clustering.\n\n\nCode\nfig, axes = plt.subplots(4, 5, figsize=(16, 12))\nclass_labels = sorted(labeled['Label'].dropna().unique())\ncolors = plt.cm.tab10.colors\n\nfor ax, col in zip(axes.flat, feature_cols):\n    for i, label in enumerate(class_labels):\n        vals = labeled.loc[labeled['Label'] == label, col]\n        ax.hist(vals, bins=15, alpha=0.5, color=colors[i], label=f'Class {int(label)}', edgecolor='none')\n    ax.set_title(col, fontsize=9)\n    ax.set_yticks([])\n    if col in intersting_cols:\n        for spine in ax.spines.values():\n            spine.set_edgecolor('red')\n            spine.set_linewidth(3)\n\nhandles = [plt.Rectangle((0, 0), 1, 1, color=colors[i], alpha=0.5) for i in range(len(class_labels))]\nfig.legend(handles, [f'Class {int(l)}' for l in class_labels], loc='upper right', ncol=len(class_labels))\nplt.suptitle('Feature distributions by class (labeled data)', y=1.01)\nplt.tight_layout()"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#feature-deep-analyis",
+    "href": "clustering_sensors/site/analysis.html#feature-deep-analyis",
+    "title": "Introduction",
+    "section": "Feature deep analyis",
+    "text": "Feature deep analyis\nIt seems that we are dealing with a featureset that does not have much structure in the majority of the columns.\nLet’s go back to look at the sensors data more in depth to see if there is nuggets of signal to be found.\nSensors 2, 9 and 13 seem to have distinct value distribitions from the rest, which seem about uniform.\n\n\nCode\nintersting_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\nfig, axes = plt.subplots(4, 5, figsize=(16, 12))\nfor ax, col in zip(axes.flat, feature_cols):\n    ax.hist(data[col], bins=30, edgecolor='none')\n    ax.set_title(col, fontsize=9)\n    ax.set_yticks([])\n    if col in intersting_cols:\n        for spine in ax.spines.values():\n            spine.set_edgecolor('red')\n            spine.set_linewidth(3)\nplt.suptitle('Feature distributions', y=1.01)\nplt.tight_layout()\n\n\n\n\n\n\n\n\n\nLooking at these 3 columns has the added benefit that we can easily visualize.\n\n\nCode\nfrom itertools import combinations\n\nsensor_cols = ['Sensor 2', 'Sensor 9', 'Sensor 13']\npairs = list(combinations(sensor_cols, 2))\nlabeled_mask = labels_known.notna()\n\nfig, axes = plt.subplots(1, 3, figsize=(18, 5))\nfor ax, (x_col, y_col) in zip(axes, pairs):\n    ax.scatter(data.loc[labels_known.isna(), x_col], data.loc[labels_known.isna(), y_col],\n               c='lightgrey', s=15, label='unlabeled', zorder=1)\n    ax.scatter(data.loc[labeled_mask, x_col], data.loc[labeled_mask, y_col],\n               c=labels_known[labeled_mask].astype('category').cat.codes,\n               cmap='tab10', s=60, zorder=2, edgecolors='black', linewidths=0.5)\n    ax.set_xlabel(x_col)\n    ax.set_ylabel(y_col)\n    ax.set_title(f'{x_col} vs {y_col}')\nplt.tight_layout()\n\ndata[\"label\"] = labels_known.fillna(\"unlabeled\").astype(str)\n\nfig3d = px.scatter_3d(\n    data, x=\"Sensor 2\", y=\"Sensor 13\", z=\"Sensor 9\",\n    color=\"Label\",\n    color_discrete_map={\"unlabeled\": \"lightgrey\"},\n    opacity=0.7,\n    title=\"Interesting columns — labeled breakdowns on top of unlabeled\"\n)\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n                            \n                                            \n\n\n\n\n\n\n\n\n\nThis shows that the data follow a clear geometrical pattern that we should be able to uncover using clustering."
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#linear-classifier",
+    "href": "clustering_sensors/site/analysis.html#linear-classifier",
+    "title": "Introduction",
+    "section": "Linear classifier",
+    "text": "Linear classifier\nAs a reference, we train a simple logistic regression on Sensors 2, 9, 13 and the engineered radius² feature. This serves as a baseline to compare against the stepwise clustering approach and to illustrate the limitations of a linear decision boundary on this data.\n\n\nCode\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.model_selection import LeaveOneOut\nfrom sklearn.metrics import classification_report\nimport numpy as np\n\nfeature_set = ['Sensor 2', 'Sensor 9', 'Sensor 13', 'radius_sq']\nlabeled_df = data[labels_known.notna()].copy()\n\nX_clf = labeled_df[feature_set].values\ny_clf = labeled_df['Label'].astype(int).values\n\nclf = LogisticRegression(C=1.0, max_iter=1000, random_state=42)\n\nclf.fit(X_clf, y_clf)\n\ny_pred = clf.predict(X_clf)\n\nprint(classification_report(y_clf, y_pred, zero_division=0))\n\n\n              precision    recall  f1-score   support\n\n           1       1.00      0.80      0.89        10\n           2       1.00      1.00      1.00        10\n           3       0.91      1.00      0.95        20\n\n    accuracy                           0.95        40\n   macro avg       0.97      0.93      0.95        40\nweighted avg       0.95      0.95      0.95        40"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#step-1",
+    "href": "clustering_sensors/site/analysis.html#step-1",
+    "title": "Introduction",
+    "section": "Step 1",
+    "text": "Step 1\n\n\nCode\nfrom sklearn.cluster import KMeans\nfrom sklearn.metrics import classification_report\n\n\n\nkm_step1 = KMeans(n_clusters=2, random_state=42, n_init=10)\ndata['step1_cluster'] = km_step1.fit_predict(np.column_stack([radius_sq]))\n\n# Identify outer cluster by highest mean radius\nmean_radius = data.groupby('step1_cluster')['radius_sq'].mean()\nouter_cluster = mean_radius.idxmax()\ndata['step1_label'] = data['step1_cluster'].map({outer_cluster: 'outer', 1 - outer_cluster: 'core'})\n\nfig, ax = plt.subplots(figsize=(7, 6))\nfor label, group in data.groupby('step1_label'):\n    ax.scatter(group['Sensor 2'], group['Sensor 13'], s=15, label=label, alpha=0.6)\nlabeled_mask = labels_known.notna()\nax.scatter(data.loc[labeled_mask, 'Sensor 2'], data.loc[labeled_mask, 'Sensor 13'],\n           c=labels_known[labeled_mask].astype('category').cat.codes,\n           cmap='tab10', s=60, zorder=3, edgecolors='black', linewidths=0.5)\nax.set_title('Step 1: outer ellipse vs core (radius feature + K-Means)')\nax.legend()\nplt.tight_layout()\n\n# Map step1_label back to original labels: outer=3, core=majority label among labeled core points\nlabeled_df = data[labeled_mask].copy()\nlabeled_df['true_label'] = labels_known[labeled_mask].astype(int)\ncore_majority = labeled_df[labeled_df['step1_label'] == 'core']['true_label'].value_counts().idxmax()\npred_step1 = labeled_df['step1_label'].map({'outer': 3, 'core': core_majority})\nprint(classification_report(labeled_df['true_label'], pred_step1))\n\n\n              precision    recall  f1-score   support\n\n           1       0.00      0.00      0.00        10\n           2       0.50      1.00      0.67        10\n           3       1.00      1.00      1.00        20\n\n    accuracy                           0.75        40\n   macro avg       0.50      0.67      0.56        40\nweighted avg       0.62      0.75      0.67        40\n\n\n\n/Users/wisse/dev/ml6/clustering_sensors/.venv/lib/python3.12/site-packages/sklearn/metrics/_classification.py:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.\n  _warn_prf(average, modifier, f\"{metric.capitalize()} is\", result.shape[0])\n/Users/wisse/dev/ml6/clustering_sensors/.venv/lib/python3.12/site-packages/sklearn/metrics/_classification.py:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.\n  _warn_prf(average, modifier, f\"{metric.capitalize()} is\", result.shape[0])\n/Users/wisse/dev/ml6/clustering_sensors/.venv/lib/python3.12/site-packages/sklearn/metrics/_classification.py:1833: UndefinedMetricWarning: Precision is ill-defined and being set to 0.0 in labels with no predicted samples. Use `zero_division` parameter to control this behavior.\n  _warn_prf(average, modifier, f\"{metric.capitalize()} is\", result.shape[0])"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#step-2",
+    "href": "clustering_sensors/site/analysis.html#step-2",
+    "title": "Introduction",
+    "section": "Step 2",
+    "text": "Step 2\n\n\nCode\n# Step 2: cluster core points into the 2 remaining classes\ncore_mask = data['step1_label'] == 'core'\nX_core = data.loc[core_mask, ['Sensor 2', 'Sensor 9', 'Sensor 13']].values\nlabels_core = labels_known[core_mask]\n\ncore_labels = sorted(labels_core.dropna().unique())\nk_core = len(core_labels)\nseed_centroids_core = np.array([X_core[labels_core.values == l].mean(axis=0) for l in core_labels])\n\nkm_step2 = KMeans(n_clusters=k_core, init=seed_centroids_core, n_init=1, random_state=42)\ncluster_ids = km_step2.fit_predict(X_core)\n\ncore_df = data.loc[core_mask].copy()\ncore_df['pred'] = cluster_ids\nlabeled_core = core_df[labels_core.notna()]\ncluster_to_label = labeled_core.groupby('pred')['Label'].agg(lambda x: x.value_counts().idxmax())\ncore_df['pred_label'] = core_df['pred'].map(cluster_to_label).fillna(-1).astype(str)\n\nfig3d = px.scatter_3d(core_df, x='Sensor 2', y='Sensor 9', z='Sensor 13',\n    color='pred_label', opacity=0.7, title='Step 2: K-Means')\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\nvalid = labeled_core[labeled_core['pred'].isin(cluster_to_label.index)]\nprint(classification_report(valid['Label'].astype(int), valid['pred'].map(cluster_to_label).astype(int), zero_division=0))\n\n\n                            \n                                            \n\n\n              precision    recall  f1-score   support\n\n           1       1.00      1.00      1.00        10\n           2       1.00      1.00      1.00        10\n\n    accuracy                           1.00        20\n   macro avg       1.00      1.00      1.00        20\nweighted avg       1.00      1.00      1.00        20"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#section",
+    "href": "clustering_sensors/site/analysis.html#section",
+    "title": "Introduction",
+    "section": "",
+    "text": "As a sanity check, we also try to apply KMeans directly on the transformed features. But, this still deals with the fact that the clusters are not captured in single spheres.\n\n\nCode\n# All-in-one: K-Means on Sensor 2, 9, 13 + radius² feature\ns2 = data['Sensor 2'].values\ns13 = data['Sensor 13'].values\nradius_sq = s2**2 + s13**2\nX_full = np.column_stack([data[['Sensor 2', 'Sensor 9', 'Sensor 13']].values, radius_sq])\n\nunique_labels = sorted(labels_known.dropna().unique())\nseed_centroids_full = np.array([X_full[labels_known == l].mean(axis=0) for l in unique_labels])\n\nkm_full = KMeans(n_clusters=3, init=seed_centroids_full, n_init=1, random_state=42)\ndata['km_full_label'] = km_full.fit_predict(X_full)\ndata['km_full_label'] = data['km_full_label'].map(dict(enumerate(unique_labels)))\n\nlabeled_df = data[labels_known.notna()].copy()\nprint(classification_report(labeled_df['Label'].astype(int), labeled_df['km_full_label'].astype(int), zero_division=0))\n\nplot_df = data[['Sensor 2', 'Sensor 9', 'Sensor 13', 'km_full_label']].copy()\nplot_df['km_full_label'] = plot_df['km_full_label'].astype(str)\nfig3d = px.scatter_3d(plot_df, x='Sensor 2', y='Sensor 9', z='Sensor 13',\n    color='km_full_label', opacity=0.7, title='K-Means with radius² feature (all-in-one)')\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n              precision    recall  f1-score   support\n\n           1       0.80      0.80      0.80        10\n           2       0.71      1.00      0.83        10\n           3       0.88      0.70      0.78        20\n\n    accuracy                           0.80        40\n   macro avg       0.80      0.83      0.80        40\nweighted avg       0.82      0.80      0.80        40"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#k-means-on",
+    "href": "clustering_sensors/site/analysis.html#k-means-on",
+    "title": "Introduction",
+    "section": "k-Means on",
+    "text": "k-Means on\nAs a sanity check, we also try to apply KMeans directly on the transformed features. But, this still deals with the fact that the clusters are not captured in single spheres.\n\n\nCode\n# All-in-one: K-Means on Sensor 2, 9, 13 + radius² feature\ns2 = data['Sensor 2'].values\ns13 = data['Sensor 13'].values\nradius_sq = s2**2 + s13**2\nX_full = np.column_stack([data[['Sensor 2', 'Sensor 9', 'Sensor 13']].values, radius_sq])\n\nunique_labels = sorted(labels_known.dropna().unique())\nseed_centroids_full = np.array([X_full[labels_known == l].mean(axis=0) for l in unique_labels])\n\nkm_full = KMeans(n_clusters=3, init=seed_centroids_full, n_init=1, random_state=42)\ndata['km_full_label'] = km_full.fit_predict(X_full)\ndata['km_full_label'] = data['km_full_label'].map(dict(enumerate(unique_labels)))\n\nlabeled_df = data[labels_known.notna()].copy()\nprint(classification_report(labeled_df['Label'].astype(int), labeled_df['km_full_label'].astype(int), zero_division=0))\n\nplot_df = data[['Sensor 2', 'Sensor 9', 'Sensor 13', 'km_full_label']].copy()\nplot_df['km_full_label'] = plot_df['km_full_label'].astype(str)\nfig3d = px.scatter_3d(plot_df, x='Sensor 2', y='Sensor 9', z='Sensor 13',\n    color='km_full_label', opacity=0.7, title='K-Means with radius² feature (all-in-one)')\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n              precision    recall  f1-score   support\n\n           1       0.80      0.80      0.80        10\n           2       0.71      1.00      0.83        10\n           3       0.88      0.70      0.78        20\n\n    accuracy                           0.80        40\n   macro avg       0.80      0.83      0.80        40\nweighted avg       0.82      0.80      0.80        40"
+  },
+  {
+    "objectID": "clustering_sensors/site/analysis.html#k-means-on-transformed-features",
+    "href": "clustering_sensors/site/analysis.html#k-means-on-transformed-features",
+    "title": "Introduction",
+    "section": "k-Means on transformed features",
+    "text": "k-Means on transformed features\nAs a sanity check, we also try to apply KMeans directly on the transformed features. But, this still deals with the fact that the clusters are not captured in single spheres.\n\n\nCode\n# All-in-one: K-Means on Sensor 2, 9, 13 + radius² feature\ns2 = data['Sensor 2'].values\ns13 = data['Sensor 13'].values\nradius_sq = s2**2 + s13**2\nX_full = np.column_stack([data[['Sensor 2', 'Sensor 9', 'Sensor 13']].values, radius_sq])\n\nunique_labels = sorted(labels_known.dropna().unique())\nseed_centroids_full = np.array([X_full[labels_known == l].mean(axis=0) for l in unique_labels])\n\nkm_full = KMeans(n_clusters=3, init=seed_centroids_full, n_init=1, random_state=42)\ndata['km_full_label'] = km_full.fit_predict(X_full)\ndata['km_full_label'] = data['km_full_label'].map(dict(enumerate(unique_labels)))\n\nlabeled_df = data[labels_known.notna()].copy()\nprint(classification_report(labeled_df['Label'].astype(int), labeled_df['km_full_label'].astype(int), zero_division=0))\n\nplot_df = data[['Sensor 2', 'Sensor 9', 'Sensor 13', 'km_full_label']].copy()\nplot_df['km_full_label'] = plot_df['km_full_label'].astype(str)\nfig3d = px.scatter_3d(plot_df, x='Sensor 2', y='Sensor 9', z='Sensor 13',\n    color='km_full_label', opacity=0.7, title='K-Means with radius² feature (all-in-one)')\nfig3d.update_traces(marker_size=4)\nfig3d.show()\n\n\n              precision    recall  f1-score   support\n\n           1       0.80      0.80      0.80        10\n           2       0.71      1.00      0.83        10\n           3       0.88      0.70      0.78        20\n\n    accuracy                           0.80        40\n   macro avg       0.80      0.83      0.80        40\nweighted avg       0.82      0.80      0.80        40"
+  },
+  {
+    "objectID": "presentation.html#deployment",
+    "href": "presentation.html#deployment",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment",
+    "text": "Deployment\n\nModel packaged as an OutageClusterer class with a sklearn-style interface (source):\n\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk\n\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category.\n\n\n\nOn Google Cloud this can be containerised and deployed to Cloud Run, which scales to 0 if not used.\n\n\n\nPrerequisites before deployment\n\nLabel more data — currently we only evaluate on training data. For validating this logic as a classifier, 100 more labels would be needed.\nConsider a non-linear classifier on the full labelled set as a more robust solution"
+  },
+  {
+    "objectID": "presentation.html#value-extended",
+    "href": "presentation.html#value-extended",
+    "title": "Clustering Sensor Data",
+    "section": "Value Extended",
+    "text": "Value Extended\nMore value could be provided to Customer A by building a forward looking model on sensor timeseries data as they could intervene before the outage happens.\n\nOutage forecasting setup\n\nWith small time intervals, sending sensor timeseries to model\nModel endpoint that receives sensor data and predicts outage + type\nModel sends out alerts that allow for manual intervention and prevention"
+  },
+  {
+    "objectID": "presentation.html#approach-detection-shared-step",
+    "href": "presentation.html#approach-detection-shared-step",
+    "title": "Clustering Sensor Data",
+    "section": "Approach: Detection (shared step)",
+    "text": "Approach: Detection (shared step)\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use; has a pretrained football model\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-12-prelimenary-detection-shared-step",
+    "href": "presentation.html#approach-12-prelimenary-detection-shared-step",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1&2 prelimenary: Detection (shared step)",
+    "text": "Approach 1&2 prelimenary: Detection (shared step)\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use; has a pretrained football model\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-12-prelimenary-detection",
+    "href": "presentation.html#approach-12-prelimenary-detection",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 1&2 prelimenary: Detection",
+    "text": "Approach 1&2 prelimenary: Detection\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use; has a pretrained football model\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#self-hosted-approach-12-prelimenary-detection",
+    "href": "presentation.html#self-hosted-approach-12-prelimenary-detection",
+    "title": "Clustering Sensor Data",
+    "section": "Self-hosted approach 1&2 prelimenary: Detection",
+    "text": "Self-hosted approach 1&2 prelimenary: Detection\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use; has a pretrained football model\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#self-hosted-approach-12",
+    "href": "presentation.html#self-hosted-approach-12",
+    "title": "Clustering Sensor Data",
+    "section": "Self-hosted approach 1&2",
+    "text": "Self-hosted approach 1&2\nPrelimenary: detection\nBoth approaches start with detecting all people in each frame:\n\nDetectron2 (Meta) — Apache 2.0, free for commercial use\nYOLO (Ultralytics) — AGPL-3.0, requires enterprise license for commercial use\n\nPro: has a pretrained football model\n\n\nOutputs: one bounding box per person per frame"
+  },
+  {
+    "objectID": "presentation.html#approach-3-managed-vision-apis",
+    "href": "presentation.html#approach-3-managed-vision-apis",
+    "title": "Clustering Sensor Data",
+    "section": "Approach 3: Managed Vision APIs",
+    "text": "Approach 3: Managed Vision APIs\n\nSeveral managed APIs exist (Google Video Intelligence, AWS Rekognition, Azure Video Indexer, Roboflow)\nSelection depends on client infrastructure preferences and quality vs cost benchmarking\n\nPros:\n\nEasy to implement and prototype\nCheaper for small volumes\n\nCons:\n\nPropieritary data leaves your company\nExpensive for large volumes\nVendor lock-in"
+  },
+  {
+    "objectID": "presentation.html#deployment-1",
+    "href": "presentation.html#deployment-1",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment",
+    "text": "Deployment\nIn order to determine the deployment of these approaches, we need to know:\n\nBatch vs Real-time:\n\nFor batch predictions that we can run at request or scheduled, latency is less of an issue. GPU preemptible.\nFor real-time inference we need to build for speed. Managed APIs are probably not an option due to network delays. Live GPU instance.\n\nLow or high-volume:\n\nLow volumes could be cheaper through a managed API.\nHigh volumes are better self-hosted as the cost scales better.\n\n\n\nNote: The managed API approach has a hard requirement of data leaving the premise."
+  },
+  {
+    "objectID": "presentation.html#deployment-2",
+    "href": "presentation.html#deployment-2",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment",
+    "text": "Deployment"
+  },
+  {
+    "objectID": "presentation.html#deployment-for-self-hosted",
+    "href": "presentation.html#deployment-for-self-hosted",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment for self-hosted",
+    "text": "Deployment for self-hosted"
+  },
+  {
+    "objectID": "presentation.html#deployment-for-self-hosted-batch-processing",
+    "href": "presentation.html#deployment-for-self-hosted-batch-processing",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment for self-hosted batch processing",
+    "text": "Deployment for self-hosted batch processing\n\nScheduled job that polls every (6, 12, 24) hours for new videos uploaded\nSpin up single GPU (like T4) should be enough to run both models (sequentially)\nTimestamped predictions uploaded to data warehouse for further processing"
+  },
+  {
+    "objectID": "presentation.html#deployment-for-self-hosted-batch-processing-1",
+    "href": "presentation.html#deployment-for-self-hosted-batch-processing-1",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment for self-hosted batch processing",
+    "text": "Deployment for self-hosted batch processing\n\nScheduled job that polls every (6, 12, 24) hours for new videos uploaded\nSpin up single GPU (like T4) should be enough to run both models (sequentially)\nTimestamped predictions uploaded to data warehouse for further processing"
+  },
+  {
+    "objectID": "presentation.html#deployment-for-self-hosted-real-time-processing",
+    "href": "presentation.html#deployment-for-self-hosted-real-time-processing",
+    "title": "Clustering Sensor Data",
+    "section": "Deployment for self-hosted real-time processing",
+    "text": "Deployment for self-hosted real-time processing\n\nEndpoint for model inference on a video stream\nConstant live GPU (like T4) to run both models\n\nScale horizontally if we need multiple concurrency\n\nLive predictions stream"
+  }
+]

@@ -18,14 +18,14 @@
     "href": "presentation.html#problem-statement",
     "title": "Clustering Sensor Data",
     "section": "Problem Statement",
-    "text": "Problem Statement\n\nMachine at Customer A has broken down 1600 times\nExperts have manually labelled 40 of these into 3 failure categories\nGoal: use the 40 labels to classify all 1560 unlabelled breakdowns\n\n\nWhy does this matter?\n\nSaves manual labelling time\nEnables real-time breakdown classification → faster resolution\nUncovers patterns to prevent future breakdowns"
+    "text": "Problem Statement\n\nMachine at Customer A has broken down 1600 times\nExperts have manually labelled 40 of these into 3 failure categories\nGoal: use the 40 labels to classify all 1560 unlabelled breakdowns\n\nWhy does this matter?\n\nSaves manual labelling time\nEnables real-time breakdown classification → faster resolution\nUncovers patterns to prevent future breakdowns"
   },
   {
     "objectID": "presentation.html#approach",
     "href": "presentation.html#approach",
     "title": "Clustering Sensor Data",
     "section": "Approach",
-    "text": "Approach\nTo be filled in"
+    "text": "Approach\n\n…"
   },
   {
     "objectID": "presentation.html#results",
@@ -39,14 +39,14 @@
     "href": "presentation.html#deployment-value",
     "title": "Clustering Sensor Data",
     "section": "Deployment & Value",
-    "text": "Deployment & Value\nModel packaged as an OutageClusterer class with a sklearn-style interface:\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category."
+    "text": "Deployment & Value\n\nModel packaged as an OutageClusterer class with a sklearn-style interface (source):\n\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk\n\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category.\n\n\nPrerequisites\n\nLabel more data to see how well this classifier extrapolates as we only evaluate on training data now. This would allow us to evaluate the labelling of currently unlabeled data.\nExplore possibility of training a normal non-linear classifier on the full set of labelled data as it’s a more robust approach."
   },
   {
     "objectID": "presentation.html#roadmap",
     "href": "presentation.html#roadmap",
     "title": "Clustering Sensor Data",
     "section": "Roadmap",
-    "text": "Roadmap\nTo be filled in"
+    "text": "Roadmap\n\nSimple\n\n\n\n\n\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n1\nFeasibility study & model development (done)\nProvide labelled data (done)\nLow\n\n\n2\nValidate classifier on additional labelled data\nLabel ~100 more breakdowns\nMedium (delay)\n\n\n3–4\nBuild & test deployment pipeline\nAccess to infrastructure\nMedium\n\n\n5\nModel monitoring & alerting setup\n-\nLow\n\n\n\nExtended\n\n\n\n\n\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n—\nDependency: historical timeseries data available\nProvide timeseries export\nHigh\n\n\n6\nBuild timeseries lookahead classifier\n—\nHigh\n\n\n7–8\nDeploy timeseries classifier\nAccess to infrastructure\nMedium\n\n\n9\nMonitoring & alerting for timeseries model\nDefine intervention thresholds\nLow\n\n\n\nWeeks 1–5 (Junior + PM) run in parallel with weeks 6–9 (Senior Engineer) once the data dependency is resolved."
   },
   {
     "objectID": "index.html",
@@ -137,7 +137,7 @@
     "href": "presentation.html#deployment-value-2",
     "title": "Clustering Sensor Data",
     "section": "Deployment & Value",
-    "text": "Deployment & Value\nOutage classifiaction setup\n\nBreakdown triggers and event that sends current sensor status to model\nModel endpoint that receives sensor data from event triggered on breakdown\nReturns predicted outage category, which can be handled to resolve quicker"
+    "text": "Deployment & Value\n\n…"
   },
   {
     "objectID": "presentation.html#deployment-value-extended",
@@ -145,5 +145,33 @@
     "title": "Clustering Sensor Data",
     "section": "Deployment & Value Extended",
     "text": "Deployment & Value Extended\nMore value could be provided to Customer A by building a forward looking model on sensor timeseries data as they could intervene before the outage happens.\n\nOutage forecasting setup\n\nWith small time intervals constantly sending sensor timeseries to model\nModel endpoint that receives sensor data and predicts outage + type\nModel sends out alerts that allow for manual intervention"
+  },
+  {
+    "objectID": "presentation.html#serving",
+    "href": "presentation.html#serving",
+    "title": "Clustering Sensor Data",
+    "section": "Serving",
+    "text": "Serving\nServed via a FastAPI endpoint — breakdown event sends sensor readings, endpoint returns the predicted failure category.\n\nPrerequisites\n\nLabel more data to see how well this classifier extrapolates as we only evaluate on training data now. This would allow us to evaluate the labelling of currently unlabeled data.\nExplore possibility of training a normal non-linear classifier on the full set of labelled data as it’s a more robust approach."
+  },
+  {
+    "objectID": "presentation.html#model-package",
+    "href": "presentation.html#model-package",
+    "title": "Clustering Sensor Data",
+    "section": "Model package",
+    "text": "Model package\nModel packaged as an OutageClusterer class with a sklearn-style interface (source):\nclusterer = OutageClusterer()\nclusterer.fit_predict(data)   # train on labelled + unlabelled data\nclusterer.predict(new_data)   # classify new breakdowns\nclusterer.save(\"model.pkl\")   # persist to disk"
+  },
+  {
+    "objectID": "presentation.html#problem-statement-1",
+    "href": "presentation.html#problem-statement-1",
+    "title": "Clustering Sensor Data",
+    "section": "Problem Statement",
+    "text": "Problem Statement\n\nCustomer B has gathered video data of soccer games\nGoal: determine how many players per team are visible on screen at any given time\n\nWhy does this matter?\n\n…"
+  },
+  {
+    "objectID": "presentation.html#roadmap-1",
+    "href": "presentation.html#roadmap-1",
+    "title": "Clustering Sensor Data",
+    "section": "Roadmap",
+    "text": "Roadmap\n\n\n\n\nWeek\nObjective\nClient input\nRisk\n\n\n\n\n1\n…\n…\n…"
   }
 ]

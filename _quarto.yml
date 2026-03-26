@@ -3,13 +3,13 @@ project:
   output-dir: _site
 
 website:
-  title: "Clustering Sensor Data"
+  title: "ML6 Senior Engineer Challenge"
   navbar:
     left:
       - href: index.qmd
         text: Overview
-      - href: analysis.ipynb
-        text: Analysis
+      - href: clustering_sensors/site/analysis.ipynb
+        text: Clustering Analysis
       - href: presentation.qmd
         text: Slides
 
