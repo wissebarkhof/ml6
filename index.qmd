@@ -17,4 +17,4 @@ Customer B has gathered **video data of soccer games**.
 
 **Goal:** Determine how many players per team are visible on screen at any given time.
 
-Code: https://github.com/wissebarkhof/ml6   
+[https://github.com/wissebarkhof/ml6](https://github.com/wissebarkhof/ml6)   
