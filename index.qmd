@@ -16,3 +16,5 @@ Customer A collects data from **20 sensors** on a machine. Of 1600 observed brea
 Customer B has gathered **video data of soccer games**.
 
 **Goal:** Determine how many players per team are visible on screen at any given time.
+
+Code: https://github.com/wissebarkhof/ml6   
